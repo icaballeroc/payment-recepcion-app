@@ -54,6 +54,7 @@
     <input id="searchId" placeholder="ID de credencial o nombre y apellido">
     <button onclick="verificar()">Buscar / Verificar</button>
     <button class="secondary" onclick="toggleCam()">📷 Escanear QR con cámara</button>
+    <button class="secondary" onclick="verHistorialEscaneos()">📋 Ver historial de escaneos</button>
     <div id="camWrap">
       <video id="video" playsinline></video>
       <div id="scanGuide"></div>
@@ -112,6 +113,58 @@ function fromDbRow(r){
     creadoPor: r.creado_por, historial: r.historial || [], foto: r.foto || '',
     diasValidez: r.dias_validez, vencimiento: r.vencimiento
   };
+}
+
+async function registrarEscaneo(credencialId, responsable, resultado){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/escaneos_log`, {
+      method: 'POST',
+      headers: SB_HEADERS,
+      body: JSON.stringify([{ credencial_id: credencialId, responsable: responsable || '-', resultado }])
+    });
+  }catch(e){
+    console.error('Error registrando escaneo:', e);
+  }
+}
+
+async function verHistorialEscaneos(){
+  const box = document.getElementById('qrResult');
+  box.style.display = 'block';
+  box.innerHTML = '<div class="empty">Cargando historial...</div>';
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/escaneos_log?select=*&order=fecha.desc&limit=50`, { headers: SB_HEADERS });
+    const rows = await res.json();
+    if(!rows.length){
+      box.innerHTML = '<div class="empty">Todavía no hay escaneos registrados.</div><button class="secondary" onclick="cerrarResultado()">Cerrar</button>';
+      return;
+    }
+    const colores = { 'auth': 'var(--green)', 'noauth': 'var(--red)', 'vencida': '#f5a623', 'no_encontrada': 'var(--muted)' };
+    const etiquetas = { 'auth': 'Autorizado', 'noauth': 'No autorizado', 'vencida': 'Vencida', 'no_encontrada': 'No encontrada' };
+    box.innerHTML = '<b style="display:block;text-align:left;margin-bottom:10px;">📋 Últimos escaneos:</b>' + rows.map(r => `
+      <div style="text-align:left;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--card2);font-size:13px;">
+        <div style="display:flex;justify-content:space-between;">
+          <b>${r.responsable || '-'}</b>
+          <span style="color:${colores[r.resultado]||'var(--muted)'};font-weight:700;">${etiquetas[r.resultado]||r.resultado}</span>
+        </div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px;">${r.credencial_id || '-'} · ${new Date(r.fecha).toLocaleString('es-PY')}</div>
+      </div>
+    `).join('') + '<button class="secondary" onclick="cerrarResultado()">Cerrar</button>';
+  }catch(e){
+    box.innerHTML = '<div class="empty">No se pudo cargar el historial.</div>';
+  }
+}
+
+function cerrarResultado(){
+  document.getElementById('qrResult').style.display = 'none';
+  document.getElementById('searchId').value = '';
+}
+
+function escanearOtro(){
+  document.getElementById('qrResult').style.display = 'none';
+  document.getElementById('searchId').value = '';
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  toggleCam();
 }
 
 function estaVencida(vencimientoStr){
@@ -224,8 +277,9 @@ async function renderResultado(id, isAuto){
   const d = await getCred(id);
   box.style.display = 'block';
   if(!d){
-    box.innerHTML = `<div class="statusBig noauth">❌ CREDENCIAL NO ENCONTRADA</div>`;
+    box.innerHTML = `<div class="statusBig noauth">❌ CREDENCIAL NO ENCONTRADA</div><button onclick="escanearOtro()">🔄 Escanear otro</button>`;
     if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if(!isAuto) registrarEscaneo(id, '-', 'no_encontrada');
     return;
   }
   const vencida = estaVencida(d.vencimiento);
@@ -233,6 +287,9 @@ async function renderResultado(id, isAuto){
   const prevAuth = box.dataset.lastAuth;
   const changed = isAuto && prevAuth !== undefined && prevAuth !== String(isAuth);
   box.dataset.lastAuth = String(isAuth);
+  if(!isAuto){
+    registrarEscaneo(d.id, d.responsable, vencida ? 'vencida' : d.estado);
+  }
   box.innerHTML = `
     ${changed ? '<div style="color:#f5a623;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ EL ESTADO CAMBIÓ</div>' : ''}
     ${d.foto ? `<img src="${d.foto}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-bottom:8px;border:1px solid var(--border);">` : ''}
@@ -248,6 +305,7 @@ async function renderResultado(id, isAuto){
       <input id="guardNombre" placeholder="Tu nombre (para el registro)" style="margin-top:6px;">
       <button onclick="registrarRetiro('${d.id}')">📦 Registrar retiro físico</button>
     ` : ''}
+    <button class="secondary" onclick="escanearOtro()">🔄 Escanear otro</button>
   `;
 }
 
