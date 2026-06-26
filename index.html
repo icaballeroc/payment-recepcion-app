@@ -167,6 +167,17 @@ function escanearOtro(){
   toggleCam();
 }
 
+function startPolling(id){
+  const timer = setInterval(()=>renderResultado(id, true), 6000);
+  setTimeout(()=>{
+    if(pollTimer === timer){
+      clearInterval(timer);
+      pollTimer = null;
+    }
+  }, 120000); // se detiene solo a los 2 minutos para no consumir llamadas de más
+  return timer;
+}
+
 function estaVencida(vencimientoStr){
   if(!vencimientoStr) return false;
   const [d,m,y] = vencimientoStr.split('/').map(Number);
@@ -240,7 +251,7 @@ async function verificar(){
   if(/^RET-\d{4}-\d+$/i.test(query)){
     currentId = query;
     await renderResultado(query);
-    pollTimer = setInterval(()=>renderResultado(currentId, true), 6000);
+    pollTimer = startPolling(currentId);
     return;
   }
 
@@ -253,7 +264,7 @@ async function verificar(){
   } else if(resultados.length === 1){
     currentId = resultados[0].id;
     await renderResultado(currentId);
-    pollTimer = setInterval(()=>renderResultado(currentId, true), 6000);
+    pollTimer = startPolling(currentId);
   } else {
     box.innerHTML = '<b>Varios resultados, elegí uno:</b><br><br>' + resultados.map(d => `
       <div onclick="seleccionarResultado('${d.id}')" style="text-align:left;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;background:var(--card2);">
@@ -269,7 +280,7 @@ async function seleccionarResultado(id){
   document.getElementById('searchId').value = id;
   await renderResultado(id);
   if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(()=>renderResultado(currentId, true), 6000);
+  pollTimer = startPolling(currentId);
 }
 
 async function renderResultado(id, isAuto){
