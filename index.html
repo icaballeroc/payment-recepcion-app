@@ -48,6 +48,95 @@
   .detailRow{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; text-align:left;}
   .detailRow span:first-child{color:var(--muted);}
   #qrResult{display:none;}
+/* ============ PERSONAJE Y PANEL DE RESULTADO ============ */
+.resultStage{ position:relative; min-height:230px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:6px; }
+
+.spinnerWrap{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:30px 0; }
+.spinnerRing{ width:36px; height:36px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent); animation:spin 0.8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.monsterStage{ position:relative; width:140px; height:150px; }
+.monster{ position:absolute; bottom:0; left:50%; width:110px; height:120px; margin-left:-55px;
+  animation: monsterIn 0.55s cubic-bezier(.34,1.56,.64,1) both, breathe 3.6s ease-in-out 0.6s infinite; transform-origin:bottom center; }
+@keyframes monsterIn{ 0%{ transform:translateY(40px) scale(.4) rotate(-8deg); opacity:0; } 60%{ transform:translateY(-6px) scale(1.06) rotate(2deg); opacity:1; } 100%{ transform:translateY(0) scale(1) rotate(0); } }
+@keyframes breathe{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(1.03,0.97); } }
+
+.mBody{ position:absolute; left:10px; top:25px; width:90px; height:80px; border-radius:46% 46% 50% 50%/55% 55% 45% 45%;
+  background:linear-gradient(155deg,#22c4ac,#0e8c7c); box-shadow:0 10px 18px rgba(0,0,0,0.35); transition:background 0.4s; }
+.monster.bad .mBody{ background:linear-gradient(155deg,#e2554a,#a82f26); }
+
+.mHead{ position:relative; width:100%; height:100%; animation: headTilt 4.5s ease-in-out 1s infinite; transform-origin:bottom center; }
+@keyframes headTilt{ 0%,100%{ transform:rotate(0deg); } 25%{ transform:rotate(-3deg); } 75%{ transform:rotate(3deg); } }
+
+.mEar{ position:absolute; width:14px; height:20px; background:inherit; }
+.mHorn{ position:absolute; top:-10px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:16px solid #0e8c7c; }
+.mHorn.l{ left:14px; transform:rotate(-12deg); } .mHorn.r{ right:14px; transform:rotate(12deg); }
+.monster.bad .mHorn{ border-bottom-color:#7a1f19; }
+
+.mEyes{ position:absolute; top:28px; left:0; width:100%; display:flex; justify-content:center; gap:14px; }
+.mEye{ width:22px; height:22px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.05);
+  animation: blink 4.2s ease-in-out 1.4s infinite; }
+.mPupil{ width:10px; height:10px; background:#0b1420; border-radius:50%; animation: lookAround 5.5s ease-in-out 0.8s infinite; }
+@keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(0.12); } }
+@keyframes lookAround{ 0%,100%{ transform:translate(0,0); } 20%{ transform:translate(2px,-1px); } 50%{ transform:translate(-2px,1px); } 80%{ transform:translate(1px,1px); } }
+
+.monster.bad .mEye{ border-radius:30% 30% 50% 50%; transform:rotate(0deg); }
+.monster.bad .mPupil{ animation:none; }
+
+.mBrow{ position:absolute; top:18px; width:18px; height:4px; background:#0b1420; border-radius:2px; opacity:0; transition:opacity .3s; }
+.monster.bad .mBrow{ opacity:0.85; }
+.mBrow.l{ left:22px; transform:rotate(18deg); } .mBrow.r{ right:22px; transform:rotate(-18deg); }
+
+.mMouth{ position:absolute; bottom:18px; left:50%; width:30px; height:14px; margin-left:-15px; border-radius:0 0 14px 14px; background:#0b1420; }
+.monster.good .mMouth{ border-radius:0 0 16px 16px; clip-path: ellipse(50% 60% at 50% 0%); }
+.monster.bad .mMouth{ height:5px; border-radius:3px; transform:rotate(-3deg); }
+
+.mArm{ position:absolute; width:14px; height:34px; border-radius:10px; background:#0e8c7c; top:48px; transition: all .35s ease; }
+.monster.bad .mArm{ background:#a82f26; }
+.mArm.l{ left:-6px; transform:rotate(18deg); transform-origin:top center; }
+.mArm.r{ right:-6px; transform:rotate(-18deg); transform-origin:top center; }
+.monster.good .mArm.r{ animation: thumbsUp 2.6s ease-in-out 1.2s infinite; }
+.monster.good .mArm.l{ animation: armSway 3.2s ease-in-out infinite; }
+@keyframes thumbsUp{ 0%,60%,100%{ transform:rotate(-18deg); } 75%{ transform:rotate(-95deg); } 88%{ transform:rotate(-85deg); } }
+@keyframes armSway{ 0%,100%{ transform:rotate(18deg); } 50%{ transform:rotate(10deg); } }
+.monster.bad .mArm.l{ transform:rotate(70deg) translate(8px,2px); }
+.monster.bad .mArm.r{ transform:rotate(-70deg) translate(-8px,2px); }
+
+.mLeg{ position:absolute; width:14px; height:22px; border-radius:8px; background:#0b6d60; bottom:-14px; }
+.monster.bad .mLeg{ background:#7a1f19; }
+.mLeg.l{ left:20px; } .mLeg.r{ right:20px; animation: footTap 1.8s ease-in-out infinite; transform-origin:top center; }
+@keyframes footTap{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(10deg); } }
+.monster.bad .mLeg.r{ animation:none; }
+
+.statusCard{ position:relative; width:100%; max-width:300px; border-radius:18px; padding:18px 16px; margin-top:-6px;
+  background:rgba(22,42,61,0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border:1px solid rgba(255,255,255,0.08); overflow:hidden;
+  animation: cardPop 0.5s cubic-bezier(.2,1.4,.4,1) 0.25s both; transition: transform .15s ease; }
+@keyframes cardPop{ 0%{ transform:scale(.85) translateY(10px); opacity:0; } 100%{ transform:scale(1) translateY(0); opacity:1; } }
+.statusCard::before{ content:''; position:absolute; inset:-2px; border-radius:20px; z-index:-1;
+  background: conic-gradient(from 0deg, transparent, currentColor, transparent 35%);
+  animation: borderSweep 2.6s linear infinite; opacity:0.55; }
+.statusCard.good{ color: var(--green); box-shadow:0 0 26px rgba(31,164,99,0.35); }
+.statusCard.bad{ color: var(--red); box-shadow:0 0 26px rgba(224,68,91,0.35); }
+@keyframes borderSweep{ to{ transform:rotate(360deg); } }
+.statusCard:active{ transform:scale(0.97); }
+
+.statusTitle{ font-size:19px; font-weight:800; color:var(--text); position:relative; z-index:1; }
+.statusPhrase{ font-size:13px; color:var(--muted); margin-top:6px; font-style:italic; position:relative; z-index:1;
+  animation: fadeUp 0.5s ease 0.55s both; }
+@keyframes fadeUp{ 0%{ opacity:0; transform:translateY(6px); } 100%{ opacity:1; transform:translateY(0); } }
+
+.monster.bad.shake{ animation: monsterIn 0.55s cubic-bezier(.34,1.56,.64,1) both, breathe 3.6s ease-in-out infinite, headShake 0.45s ease; }
+@keyframes headShake{ 0%,100%{ transform:rotate(0); } 25%{ transform:rotate(-9deg); } 75%{ transform:rotate(9deg); } }
+
+@media (prefers-reduced-motion: reduce){
+  .monster, .mHead, .mEye, .mPupil, .mArm, .mLeg, .statusCard, .statusCard::before{ animation:none !important; }
+}
+@media (min-width: 700px){
+  .monsterStage{ width:170px; height:180px; }
+  .monster{ width:130px; height:140px; margin-left:-65px; transform-scale:1.1; }
+}
+/* ============ FIN PERSONAJE ============ */
 </style>
 </head>
 <body>
@@ -194,36 +283,58 @@ function startPolling(id){
   return timer;
 }
 
-const MONSTRUO_MALO = `
-<svg viewBox="0 0 200 160" width="110" style="margin:8px auto;display:block;">
-  <ellipse cx="100" cy="130" rx="70" ry="12" fill="#000" opacity="0.15"/>
-  <path d="M40 90 Q40 30 100 30 Q160 30 160 90 Q160 130 100 130 Q40 130 40 90 Z" fill="#c0392b"/>
-  <path d="M55 50 L48 25 L68 45 Z" fill="#922b21"/>
-  <path d="M145 50 L152 25 L132 45 Z" fill="#922b21"/>
-  <circle cx="75" cy="80" r="14" fill="#fff"/>
-  <circle cx="125" cy="80" r="14" fill="#fff"/>
-  <circle cx="78" cy="82" r="6" fill="#1a1a1a"/>
-  <circle cx="122" cy="82" r="6" fill="#1a1a1a"/>
-  <path d="M65 110 Q100 135 135 110 Q130 95 100 100 Q70 95 65 110 Z" fill="#1a1a1a"/>
-  <path d="M75 108 L80 100 L85 108 L90 100 L95 108 L100 100 L105 108 L110 100 L115 108 L120 100 L125 108" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
-  <rect x="58" y="118" width="20" height="14" rx="3" fill="#e74c3c" transform="rotate(-15 68 125)"/>
-  <text x="68" y="129" font-size="10" fill="#fff" text-anchor="middle" transform="rotate(-15 68 125)">⛔</text>
-</svg>`;
+const FRASES_BUENO = [
+  "😎 Pode levar... eu finjo que nem vi.",
+  "😏 Tá liberado.",
+  "😂 Vai tranquilo...",
+  "🤣 Só devolve depois!",
+  "😴 Agora deixa eu descansar."
+];
+const FRASES_MALO = [
+  "😈 Hoje não.",
+  "😂 Nem insiste.",
+  "😏 Esse equipamento fica comigo.",
+  "🙃 Você tentou...",
+  "🤣 Volta amanhã.",
+  "😎 Boa tentativa."
+];
+function fraseAleatoria(lista){ return lista[Math.floor(Math.random()*lista.length)]; }
 
-const MONSTRUO_BUENO = `
-<svg viewBox="0 0 200 160" width="110" style="margin:8px auto;display:block;">
-  <ellipse cx="100" cy="135" rx="70" ry="12" fill="#000" opacity="0.12"/>
-  <path d="M40 95 Q40 35 100 35 Q160 35 160 95 Q160 135 100 135 Q40 135 40 95 Z" fill="#19b6a0"/>
-  <circle cx="60" cy="60" r="10" fill="#19b6a0"/>
-  <circle cx="140" cy="60" r="10" fill="#19b6a0"/>
-  <circle cx="78" cy="85" r="13" fill="#fff"/>
-  <circle cx="122" cy="85" r="13" fill="#fff"/>
-  <circle cx="80" cy="86" r="5" fill="#0b1420"/>
-  <circle cx="120" cy="86" r="5" fill="#0b1420"/>
-  <path d="M70 108 Q100 128 130 108" stroke="#0b1420" stroke-width="4" fill="none" stroke-linecap="round"/>
-  <path d="M65 30 L75 12 L85 30 Z" fill="#0e8c7c"/>
-  <path d="M115 30 L125 12 L135 30 Z" fill="#0e8c7c"/>
-</svg>`;
+function buildMonster(mood){
+  return `
+  <div class="monsterStage">
+    <div class="monster ${mood}" id="monsterEl">
+      <div class="mLeg l"></div>
+      <div class="mLeg r"></div>
+      <div class="mArm l"></div>
+      <div class="mArm r"></div>
+      <div class="mBody">
+        <div class="mHead">
+          <div class="mHorn l"></div><div class="mHorn r"></div>
+          <div class="mBrow l"></div><div class="mBrow r"></div>
+          <div class="mEyes">
+            <div class="mEye"><div class="mPupil"></div></div>
+            <div class="mEye"><div class="mPupil"></div></div>
+          </div>
+          <div class="mMouth"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setupCardInteraction(){
+  const card = document.getElementById('statusCardEl');
+  const monster = document.getElementById('monsterEl');
+  if(!card || !monster || !card.classList.contains('bad')) return;
+  card.addEventListener('click', () => {
+    monster.classList.remove('shake');
+    void monster.offsetWidth; // reiniciar animación
+    monster.classList.add('shake');
+    card.style.transform = 'translateX(-4px)';
+    setTimeout(()=>{ card.style.transform = ''; }, 150);
+  });
+}
 
 function estaVencida(vencimientoStr){
   if(!vencimientoStr) return false;
@@ -332,28 +443,56 @@ async function seleccionarResultado(id){
 
 async function renderResultado(id, isAuto){
   const box = document.getElementById('qrResult');
-  const d = await getCred(id);
   box.style.display = 'block';
+
+  // Las búsquedas manuales siempre son "fresh" — no comparan contra resultados de otra credencial
+  if(!isAuto){ delete box.dataset.lastAuth; }
+
+  // Mientras consulta, mostrar spinner solo si NO es un refresco automático silencioso
+  if(!isAuto){
+    box.innerHTML = `<div class="spinnerWrap"><div class="spinnerRing"></div><div style="font-size:12px;color:var(--muted);">Verificando...</div></div>`;
+  }
+
+  const d = await getCred(id);
+
   if(!d){
     box.innerHTML = `<div class="statusBig noauth">❌ CREDENCIAL NO ENCONTRADA</div><button onclick="escanearOtro()">🔄 Escanear otro</button>`;
     if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if(!isAuto) registrarEscaneo(id, '-', 'no_encontrada');
     return;
   }
+
   const vencida = estaVencida(d.vencimiento);
   const isAuth = d.estado === 'auth' && !vencida;
   const prevAuth = box.dataset.lastAuth;
-  const changed = isAuto && prevAuth !== undefined && prevAuth !== String(isAuth);
+  const yaRenderizado = prevAuth !== undefined;
+  const changed = yaRenderizado && prevAuth !== String(isAuth);
+
+  // Si es un refresco automático y el estado NO cambió, no reconstruir nada:
+  // el personaje sigue "vivo" con sus animaciones en curso, sin parpadeos.
+  if(isAuto && yaRenderizado && !changed){
+    return;
+  }
+
   box.dataset.lastAuth = String(isAuth);
   if(!isAuto){
     registrarEscaneo(d.id, d.responsable, vencida ? 'vencida' : d.estado);
   }
+
+  const mood = isAuth ? 'good' : 'bad';
+  const frase = isAuth ? fraseAleatoria(FRASES_BUENO) : fraseAleatoria(FRASES_MALO);
+  const tituloEstado = vencida ? '⛔ CREDENCIAL VENCIDA' : (isAuth ? '✅ AUTORIZADO PARA RETIRO' : '⛔ NO AUTORIZADO');
+
   box.innerHTML = `
-    ${changed ? '<div style="color:#f5a623;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ EL ESTADO CAMBIÓ</div>' : ''}
-    ${d.foto ? `<img src="${d.foto}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-bottom:8px;border:1px solid var(--border);">` : ''}
-    ${(!isAuth) ? MONSTRUO_MALO : MONSTRUO_BUENO}
-    ${(!isAuth) ? '<div style="font-size:12px;color:var(--muted);font-style:italic;">😈 "Mmm... este permiso no estaba en mi menú hoy"</div>' : '<div style="font-size:12px;color:var(--muted);font-style:italic;">😄 "¡Adelante, pasá nomás!"</div>'}
-    <div class="statusBig ${isAuth?'auth':'noauth'}">${vencida ? '⛔ CREDENCIAL VENCIDA' : (isAuth?'✅ AUTORIZADO PARA RETIRO':'⛔ NO AUTORIZADO')}</div>
+    <div class="resultStage">
+      ${changed ? '<div style="color:#f5a623;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ EL ESTADO CAMBIÓ</div>' : ''}
+      ${d.foto ? `<img src="${d.foto}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;margin-bottom:4px;border:1px solid var(--border);">` : ''}
+      ${buildMonster(mood)}
+      <div class="statusCard ${mood}" id="statusCardEl">
+        <div class="statusTitle">${tituloEstado}</div>
+        <div class="statusPhrase">${frase}</div>
+      </div>
+    </div>
     <div class="detailRow"><span>ID</span><span>${d.id}</span></div>
     <div class="detailRow"><span>Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
     <div class="detailRow"><span>Serie</span><span>${d.serie||'-'}</span></div>
@@ -367,6 +506,7 @@ async function renderResultado(id, isAuto){
     ` : ''}
     <button class="secondary" onclick="escanearOtro()">🔄 Escanear otro</button>
   `;
+  setupCardInteraction();
 }
 
 let barcodeDetector = null;
