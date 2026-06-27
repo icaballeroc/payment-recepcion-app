@@ -136,6 +136,37 @@
   .monsterStage{ width:170px; height:180px; }
   .monster{ width:130px; height:140px; margin-left:-65px; transform-scale:1.1; }
 }
+.monsterShadow{ position:absolute; bottom:-4px; left:50%; width:70px; height:14px; margin-left:-35px; border-radius:50%;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.4), transparent 70%);
+  animation: shadowPulse 3.6s ease-in-out 0.6s infinite; }
+@keyframes shadowPulse{ 0%,100%{ transform:scale(1); opacity:0.5; } 50%{ transform:scale(0.85); opacity:0.3; } }
+
+.particleField{ position:absolute; inset:0; pointer-events:none; overflow:visible; }
+.particle{ position:absolute; border-radius:50%; opacity:0; }
+.monster.good ~ .particleField .particle{ background:var(--accent); animation: confetti 1.1s ease-out forwards; }
+.monster.bad ~ .particleField .particle{ background:#6b6b6b; border-radius:40%; animation: dustPuff 0.9s ease-out forwards; }
+@keyframes confetti{
+  0%{ opacity:0; transform:translate(0,0) scale(0.4) rotate(0deg); }
+  15%{ opacity:1; }
+  100%{ opacity:0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot)); }
+}
+@keyframes dustPuff{
+  0%{ opacity:0; transform:translate(0,0) scale(0.3); }
+  20%{ opacity:0.6; }
+  100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(1.4); }
+}
+
+.detailsCard{ width:100%; max-width:300px; margin:14px auto 0; border-radius:14px; padding:4px 14px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--border); }
+.detailsCard .detailRow:last-child{ border-bottom:none; }
+.detailRow{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px; text-align:left; }
+.detailRow span:first-child{ color:var(--muted); display:flex; align-items:center; gap:6px; }
+.detailRow span:last-child{ font-weight:600; text-align:right; }
+
+.refreshNote{ display:flex; align-items:center; justify-content:center; gap:6px; font-size:11px; color:var(--muted); margin:10px 0; }
+.refreshDot{ width:6px; height:6px; border-radius:50%; background:var(--accent); animation: dotPulse 1.6s ease-in-out infinite; }
+@keyframes dotPulse{ 0%,100%{ opacity:0.3; transform:scale(0.8); } 50%{ opacity:1; transform:scale(1.15); } }
+
 /* ============ FIN PERSONAJE ============ */
 </style>
 </head>
@@ -303,6 +334,7 @@ function fraseAleatoria(lista){ return lista[Math.floor(Math.random()*lista.leng
 function buildMonster(mood){
   return `
   <div class="monsterStage">
+    <div class="monsterShadow"></div>
     <div class="monster ${mood}" id="monsterEl">
       <div class="mLeg l"></div>
       <div class="mLeg r"></div>
@@ -320,7 +352,29 @@ function buildMonster(mood){
         </div>
       </div>
     </div>
+    <div class="particleField" id="particleField"></div>
   </div>`;
+}
+
+function lanzarParticulas(mood){
+  const field = document.getElementById('particleField');
+  if(!field) return;
+  const n = 10;
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI*2*i/n) + (Math.random()*0.5);
+    const dist = 50 + Math.random()*40;
+    p.style.setProperty('--dx', (Math.cos(angle)*dist)+'px');
+    p.style.setProperty('--dy', (Math.sin(angle)*dist - 30)+'px');
+    p.style.setProperty('--rot', (Math.random()*360)+'deg');
+    const size = mood === 'good' ? (4+Math.random()*4) : (3+Math.random()*3);
+    p.style.width = size+'px'; p.style.height = size+'px';
+    p.style.left = '50%'; p.style.top = '55%';
+    p.style.animationDelay = (Math.random()*0.15)+'s';
+    field.appendChild(p);
+  }
+  setTimeout(()=>{ field.innerHTML = ''; }, 1400);
 }
 
 function setupCardInteraction(){
@@ -486,20 +540,22 @@ async function renderResultado(id, isAuto){
   box.innerHTML = `
     <div class="resultStage">
       ${changed ? '<div style="color:#f5a623;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ EL ESTADO CAMBIÓ</div>' : ''}
-      ${d.foto ? `<img src="${d.foto}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;margin-bottom:4px;border:1px solid var(--border);">` : ''}
+      ${d.foto ? `<img src="${d.foto}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;margin-bottom:6px;border:2px solid var(--border);">` : ''}
       ${buildMonster(mood)}
       <div class="statusCard ${mood}" id="statusCardEl">
         <div class="statusTitle">${tituloEstado}</div>
         <div class="statusPhrase">${frase}</div>
       </div>
     </div>
-    <div class="detailRow"><span>ID</span><span>${d.id}</span></div>
-    <div class="detailRow"><span>Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
-    <div class="detailRow"><span>Serie</span><span>${d.serie||'-'}</span></div>
-    <div class="detailRow"><span>Responsable</span><span>${d.responsable||'-'}</span></div>
-    <div class="detailRow"><span>Emitida</span><span>${d.fecha}</span></div>
-    <div class="detailRow"><span>Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
-    <div style="font-size:11px;color:#9aa0ab;margin:8px 0;">🔄 Actualizando automáticamente</div>
+    <div class="detailsCard">
+      <div class="detailRow"><span>🆔 ID</span><span>${d.id}</span></div>
+      <div class="detailRow"><span>🖥️ Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
+      <div class="detailRow"><span>🔢 Serie</span><span>${d.serie||'-'}</span></div>
+      <div class="detailRow"><span>👤 Responsable</span><span>${d.responsable||'-'}</span></div>
+      <div class="detailRow"><span>📅 Emitida</span><span>${d.fecha}</span></div>
+      <div class="detailRow"><span>⏳ Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
+    </div>
+    <div class="refreshNote"><span class="refreshDot"></span> Actualizando automáticamente</div>
     ${isAuth ? `
       <input id="guardNombre" placeholder="Tu nombre (para el registro)" style="margin-top:6px;">
       <button onclick="registrarRetiro('${d.id}')">📦 Registrar retiro físico</button>
@@ -507,6 +563,7 @@ async function renderResultado(id, isAuto){
     <button class="secondary" onclick="escanearOtro()">🔄 Escanear otro</button>
   `;
   setupCardInteraction();
+  setTimeout(()=>lanzarParticulas(mood), 550);
 }
 
 let barcodeDetector = null;
