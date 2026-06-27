@@ -579,17 +579,17 @@ async function renderResultado(id, isAuto){
       </div>
     </div>
     <div class="detailsCard">
-      <div class="detailRow"><span>🆔 ID</span><span>${d.id}</span></div>
-      <div class="detailRow"><span>🖥️ Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
-      <div class="detailRow"><span>🔢 Serie</span><span>${d.serie||'-'}</span></div>
-      <div class="detailRow"><span>👤 Responsable</span><span>${d.responsable||'-'}</span></div>
-      <div class="detailRow"><span>📅 Emitida</span><span>${d.fecha}</span></div>
-      <div class="detailRow"><span>⏳ Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
+      <div class="detailRow"><span> ID</span><span>${d.id}</span></div>
+      <div class="detailRow"><span> Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
+      <div class="detailRow"><span> Serie</span><span>${d.serie||'-'}</span></div>
+      <div class="detailRow"><span> Responsable</span><span>${d.responsable||'-'}</span></div>
+      <div class="detailRow"><span> Emitida</span><span>${d.fecha}</span></div>
+      <div class="detailRow"><span> Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
     </div>
     <div class="refreshNote"><span class="refreshDot"></span> Actualizando automáticamente</div>
     ${isAuth ? `
       <input id="guardNombre" placeholder="Tu nombre (para el registro)" style="margin-top:6px;">
-      <button onclick="registrarRetiro('${d.id}')">📦 Registrar retiro físico</button>
+      <button onclick="registrarRetiro('${d.id}')"> Registrar retiro físico</button>
     ` : ''}
     <button class="secondary" onclick="escanearOtro()">🔄 Escanear otro</button>
   `;
