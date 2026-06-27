@@ -108,6 +108,32 @@
 @keyframes footTap{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(10deg); } }
 .monster.bad .mLeg.r{ animation:none; }
 
+.mFoot{ position:absolute; bottom:-7px; width:20px; height:10px; border-radius:50%; background:#0b6d60; }
+.mFoot.l{ left:-3px; } .mFoot.r{ right:-3px; }
+.monster.bad .mFoot{ background:#7a1f19; }
+
+.mHand{ position:absolute; bottom:-5px; width:13px; height:13px; border-radius:50%; }
+.mArm.l .mHand{ left:-1px; background:#0b6d60; } .mArm.r .mHand{ right:-1px; background:#0b6d60; }
+.monster.bad .mHand{ background:#7a1f19; }
+
+.mTail{ position:absolute; right:-10px; bottom:6px; width:22px; height:10px; border-radius:0 50% 50% 0; background:#0e8c7c;
+  transform-origin:left center; animation: tailWag 2.4s ease-in-out infinite; }
+.monster.bad .mTail{ background:#7a1f19; animation:none; transform:rotate(8deg); }
+@keyframes tailWag{ 0%,100%{ transform:rotate(-12deg); } 50%{ transform:rotate(12deg); } }
+
+.mBelly{ position:absolute; left:50%; bottom:8px; width:42px; height:34px; margin-left:-21px; border-radius:50%;
+  background:rgba(255,255,255,0.18); }
+.mSpot{ position:absolute; width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.16); }
+.mSpot.s1{ top:8px; left:14px; } .mSpot.s2{ top:30px; left:60px; } .mSpot.s3{ top:50px; left:24px; width:5px; height:5px; }
+
+.mCheek{ position:absolute; top:42px; width:10px; height:7px; border-radius:50%; background:rgba(255,120,120,0.55); opacity:0; transition:opacity .3s; filter:blur(0.3px); }
+.monster.good .mCheek{ opacity:0.9; }
+.mCheek.l{ left:14px; } .mCheek.r{ right:14px; }
+
+.mTooth{ position:absolute; top:-1px; width:5px; height:6px; background:#fff; border-radius:0 0 2px 2px; opacity:0; }
+.monster.bad .mTooth{ opacity:1; }
+.mTooth.l{ left:7px; } .mTooth.r{ right:7px; }
+
 .statusCard{ position:relative; width:100%; max-width:300px; border-radius:18px; padding:18px 16px; margin-top:-6px;
   background:rgba(22,42,61,0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border:1px solid rgba(255,255,255,0.08); overflow:hidden;
@@ -336,11 +362,15 @@ function buildMonster(mood){
   <div class="monsterStage">
     <div class="monsterShadow"></div>
     <div class="monster ${mood}" id="monsterEl">
-      <div class="mLeg l"></div>
-      <div class="mLeg r"></div>
-      <div class="mArm l"></div>
-      <div class="mArm r"></div>
+      <div class="mLeg l"><div class="mFoot l"></div></div>
+      <div class="mLeg r"><div class="mFoot r"></div></div>
+      <div class="mArm l"><div class="mHand"></div></div>
+      <div class="mArm r"><div class="mHand"></div></div>
+      <div class="mTail"></div>
       <div class="mBody">
+        <div class="mBelly">
+          <div class="mSpot s1"></div><div class="mSpot s2"></div><div class="mSpot s3"></div>
+        </div>
         <div class="mHead">
           <div class="mHorn l"></div><div class="mHorn r"></div>
           <div class="mBrow l"></div><div class="mBrow r"></div>
@@ -348,7 +378,8 @@ function buildMonster(mood){
             <div class="mEye"><div class="mPupil"></div></div>
             <div class="mEye"><div class="mPupil"></div></div>
           </div>
-          <div class="mMouth"></div>
+          <div class="mCheek l"></div><div class="mCheek r"></div>
+          <div class="mMouth"><div class="mTooth l"></div><div class="mTooth r"></div></div>
         </div>
       </div>
     </div>
