@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>PAYMENT · Verificación de Retiro</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
 <style>
   :root{
     --bg:#0b1420; --card:#101e2e; --card2:#162a3d; --border:#22394f;
@@ -256,8 +256,7 @@ if(localStorage.getItem('guard_unlocked') === 'true'){
 </script>
 
 <script>
-let stream = null;
-let scanning = false;
+let stream = null; // reservado para compatibilidad
 
 const SUPABASE_URL = 'https://xwbzagfyioommxalialq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_wcnhCVAVfWhCUECAabsW8A_aPcgQxmz';
@@ -579,17 +578,17 @@ async function renderResultado(id, isAuto){
       </div>
     </div>
     <div class="detailsCard">
-      <div class="detailRow"><span> ID</span><span>${d.id}</span></div>
-      <div class="detailRow"><span> Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
-      <div class="detailRow"><span> Serie</span><span>${d.serie||'-'}</span></div>
-      <div class="detailRow"><span> Responsable</span><span>${d.responsable||'-'}</span></div>
-      <div class="detailRow"><span> Emitida</span><span>${d.fecha}</span></div>
-      <div class="detailRow"><span> Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
+      <div class="detailRow"><span>🆔 ID</span><span>${d.id}</span></div>
+      <div class="detailRow"><span>🖥️ Equipo</span><span>${d.equipo||'-'} ${d.marca||''} ${d.modelo||''}</span></div>
+      <div class="detailRow"><span>🔢 Serie</span><span>${d.serie||'-'}</span></div>
+      <div class="detailRow"><span>👤 Responsable</span><span>${d.responsable||'-'}</span></div>
+      <div class="detailRow"><span>📅 Emitida</span><span>${d.fecha}</span></div>
+      <div class="detailRow"><span>⏳ Vencimiento</span><span>${d.vencimiento || 'Sin vencimiento'}</span></div>
     </div>
     <div class="refreshNote"><span class="refreshDot"></span> Actualizando automáticamente</div>
     ${isAuth ? `
       <input id="guardNombre" placeholder="Tu nombre (para el registro)" style="margin-top:6px;">
-      <button onclick="registrarRetiro('${d.id}')"> Registrar retiro físico</button>
+      <button onclick="registrarRetiro('${d.id}')">📦 Registrar retiro físico</button>
     ` : ''}
     <button class="secondary" onclick="escanearOtro()">🔄 Escanear otro</button>
   `;
@@ -597,85 +596,56 @@ async function renderResultado(id, isAuto){
   setTimeout(()=>lanzarParticulas(mood), 550);
 }
 
-let barcodeDetector = null;
-if('BarcodeDetector' in window){
-  try{ barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] }); }catch(e){ barcodeDetector = null; }
+let zxingReader = null;
+
+function getZXing(){
+  if(!zxingReader && typeof ZXing !== 'undefined'){
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+  }
+  return zxingReader;
 }
 
 async function toggleCam(){
   const wrap = document.getElementById('camWrap');
   const video = document.getElementById('video');
+
   if(wrap.style.display === 'block'){
     wrap.style.display = 'none';
-    scanning = false;
-    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+    const reader = getZXing();
+    if(reader){ try{ reader.reset(); }catch(e){} }
     return;
   }
+
+  wrap.style.display = 'block';
+  const reader = getZXing();
+  if(!reader){
+    alert('No se pudo inicializar el lector QR. Recargá la página.');
+    wrap.style.display = 'none';
+    return;
+  }
+
   try{
-    const constraints = {
-      video: {
-        facingMode: 'environment',
-        focusMode: 'continuous',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    let deviceId = undefined;
+    const backCam = devices.find(d => /back|rear|environment|trasera/i.test(d.label));
+    if(backCam) deviceId = backCam.deviceId;
+    else if(devices.length > 1) deviceId = devices[devices.length - 1].deviceId;
+
+    reader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
+      if(wrap.style.display !== 'block') return;
+      if(result){
+        reader.reset();
+        wrap.style.display = 'none';
+        manejarValorEscaneado(result.getText());
       }
-    };
-    try{
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-    }catch(e){
-      // Reintentar sin focusMode si el navegador lo rechaza como restricción no soportada
-      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    }
-    video.srcObject = stream;
-    video.play();
-    wrap.style.display = 'block';
-    scanning = true;
-    scanLoop();
+    });
   }catch(e){
+    wrap.style.display = 'none';
     alert('No se pudo acceder a la cámara: ' + e.message);
   }
 }
 
-async function scanLoop(){
-  if(!scanning) return;
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-
-  if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
-    // Recortar al cuadro central (zona donde el usuario alinea el QR) para mejorar la detección
-    const side = Math.min(video.videoWidth, video.videoHeight) * 0.7;
-    const sx = (video.videoWidth - side) / 2;
-    const sy = (video.videoHeight - side) / 2;
-    canvas.width = side;
-    canvas.height = side;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
-
-    let detectedValue = null;
-
-    if(barcodeDetector){
-      try{
-        const codes = await barcodeDetector.detect(canvas);
-        if(codes && codes.length){ detectedValue = codes[0].rawValue; }
-      }catch(e){ /* seguir con jsQR como respaldo */ }
-    }
-
-    if(!detectedValue){
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
-      if(code){ detectedValue = code.data; }
-    }
-
-    if(detectedValue){
-      manejarValorEscaneado(detectedValue);
-      return;
-    }
-  }
-  requestAnimationFrame(scanLoop);
-}
-
 function manejarValorEscaneado(valor){
-  // Si el QR contiene una URL completa (https://...?id=XXX), extraer solo el ID
   let idFinal = valor;
   try{
     if(valor.startsWith('http')){
@@ -683,9 +653,8 @@ function manejarValorEscaneado(valor){
       const idParam = url.searchParams.get('id');
       if(idParam) idFinal = idParam;
     }
-  }catch(e){ /* no era una URL válida, usar el valor tal cual */ }
+  }catch(e){}
   document.getElementById('searchId').value = idFinal;
-  toggleCam();
   verificar();
 }
 </script>
