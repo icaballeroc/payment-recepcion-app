@@ -607,7 +607,6 @@ function getZXing(){
 
 async function toggleCam(){
   const wrap = document.getElementById('camWrap');
-  const video = document.getElementById('video');
 
   if(wrap.style.display === 'block'){
     wrap.style.display = 'none';
@@ -625,20 +624,19 @@ async function toggleCam(){
   }
 
   try{
-    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-    let deviceId = undefined;
-    const backCam = devices.find(d => /back|rear|environment|trasera/i.test(d.label));
-    if(backCam) deviceId = backCam.deviceId;
-    else if(devices.length > 1) deviceId = devices[devices.length - 1].deviceId;
-
-    reader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
-      if(wrap.style.display !== 'block') return;
-      if(result){
-        reader.reset();
-        wrap.style.display = 'none';
-        manejarValorEscaneado(result.getText());
+    await reader.decodeFromConstraints(
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+      'video',
+      (result, err) => {
+        if(wrap.style.display !== 'block') return;
+        if(result){
+          reader.reset();
+          wrap.style.display = 'none';
+          manejarValorEscaneado(result.getText());
+        }
+        // err es normal mientras no detecta — ignorar
       }
-    });
+    );
   }catch(e){
     wrap.style.display = 'none';
     alert('No se pudo acceder a la cámara: ' + e.message);
