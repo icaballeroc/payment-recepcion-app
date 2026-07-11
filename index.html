@@ -37,11 +37,7 @@
   button.secondary{background:var(--card2); border:1px solid var(--border); color:var(--text);}
   video{width:100%; border-radius:10px; margin-top:10px;}
   #camWrap{display:none;position:relative;}
-  #scanGuide{
-    position:absolute; top:15%; left:15%; width:70%; height:70%;
-    border:3px solid var(--accent); border-radius:16px; pointer-events:none;
-    box-shadow:0 0 0 2000px rgba(0,0,0,0.35);
-  }
+  /* html5-qrcode maneja su propio video internamente */
   .statusBig{padding:26px; border-radius:14px; margin:16px 0; font-size:24px; font-weight:800;}
   .statusBig.auth{background:var(--green-bg); color:var(--green); border:2px solid var(--green);}
   .statusBig.noauth{background:var(--red-bg); color:var(--red); border:2px solid var(--red);}
@@ -218,10 +214,8 @@
     <button class="secondary" onclick="toggleCam()">📷 Escanear QR con cámara</button>
     <button class="secondary" onclick="verHistorialEscaneos()">📋 Ver historial de escaneos</button>
     <div id="camWrap">
-      <video id="video" playsinline></video>
-      <div id="scanGuide"></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;">📏 Alejá el QR 15-25cm de la cámara para que enfoque bien</div>
-      <canvas id="canvas" style="display:none;"></canvas>
+      <div id="qr-reader" style="width:100%;border-radius:10px;overflow:hidden;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;">📏 Centrá el QR en el recuadro y alejalo 15-25cm</div>
       <button class="secondary" onclick="toggleCam()">Cerrar cámara</button>
     </div>
   </div>
@@ -596,46 +590,37 @@ async function renderResultado(id, isAuto){
   setTimeout(()=>lanzarParticulas(mood), 550);
 }
 
-let zxingReader = null;
-
-function getZXing(){
-  if(!zxingReader && typeof ZXing !== 'undefined'){
-    zxingReader = new ZXing.BrowserMultiFormatReader();
-  }
-  return zxingReader;
-}
+let html5Scanner = null;
 
 async function toggleCam(){
   const wrap = document.getElementById('camWrap');
 
   if(wrap.style.display === 'block'){
     wrap.style.display = 'none';
-    const reader = getZXing();
-    if(reader){ try{ reader.reset(); }catch(e){} }
+    if(html5Scanner){
+      try{ await html5Scanner.stop(); html5Scanner.clear(); }catch(e){}
+      html5Scanner = null;
+    }
     return;
   }
 
   wrap.style.display = 'block';
-  const reader = getZXing();
-  if(!reader){
-    alert('No se pudo inicializar el lector QR. Recargá la página.');
-    wrap.style.display = 'none';
-    return;
-  }
+  document.getElementById('qr-reader').innerHTML = '';
 
   try{
-    await reader.decodeFromConstraints(
-      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-      'video',
-      (result, err) => {
-        if(wrap.style.display !== 'block') return;
-        if(result){
-          reader.reset();
+    html5Scanner = new Html5Qrcode('qr-reader');
+    await html5Scanner.start(
+      { facingMode: 'environment' },
+      { fps: 12, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+      (decodedText) => {
+        html5Scanner.stop().then(()=>{
+          html5Scanner.clear();
+          html5Scanner = null;
           wrap.style.display = 'none';
-          manejarValorEscaneado(result.getText());
-        }
-        // err es normal mientras no detecta — ignorar
-      }
+          manejarValorEscaneado(decodedText);
+        }).catch(()=>{});
+      },
+      () => { /* error frame: normal mientras no detecta */ }
     );
   }catch(e){
     wrap.style.display = 'none';
